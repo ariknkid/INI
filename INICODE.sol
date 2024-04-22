@@ -1,11 +1,12 @@
-// SPDX-License-Identifier: MIT;
+// SPDX-License-Identifier: MIT
+
 pragma solidity ^0.7.0;
 
 import "../../utils/Context.sol";
 import "./IERC20.sol";
 import "../../math/SafeMath.sol";
 
-//**
+/**
  * @dev Implementation of the {IERC20} interface.
  *
  * This implementation is agnostic to the way tokens are created. This means
