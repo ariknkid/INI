@@ -280,7 +280,7 @@ kontrak ERC20 adalah Konteks, IERC20 {
     }
 
     /**
-     * @dev Menyetel {desimal} ke nilai selain nilai default 18.
+     * @dev Menyetel {desimal} ke nilai selain nilai default 12.
      *
      * PERINGATAN: Fungsi ini hanya boleh dipanggil dari konstruktor. Paling
      * Aplikasi yang berinteraksi dengan kontrak token tidak akan diharapkan
