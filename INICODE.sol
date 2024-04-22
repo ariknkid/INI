@@ -1,5 +1,3 @@
-INI CODE
-
 // Pengenal-Lisensi SPDX: MIT
 
 soliditas pragma ^0.7.0;
