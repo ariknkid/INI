@@ -80,7 +80,7 @@ kontrak ERC20 adalah Konteks, IERC20 {
      * Misalnya, jika `desimal` sama dengan `12`, saldo token `12000000000000` harus
      * ditampilkan kepada pengguna sebagai `12000000000000` (`12000000000000 / 10 ** 12`).
      *
-     * Token biasanya memilih nilai 18, meniru hubungan antara keduanya
+     * Token biasanya memilih nilai 12, meniru hubungan antara keduanya
      * Eter dan Wei. Ini adalah nilai yang digunakan oleh {ERC20}, kecuali jika {_setupDecimals} digunakan
      * ditelepon.
      *
