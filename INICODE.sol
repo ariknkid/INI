@@ -1,306 +1,306 @@
-// Pengenal-Lisensi SPDX: MIT
+// SPDX-License-Identifier: MIT
 
-soliditas pragma ^0.7.0;
+pragma solidity ^0.7.0;
 
-impor "../../utils/Context.sol";
-impor "./IERC20.sol";
-impor "../../math/SafeMath.sol";
+import "../../utils/Context.sol";
+import "./IERC20.sol";
+import "../../math/SafeMath.sol";
 
 /**
- * @dev Implementasi antarmuka {IERC20}.
+ * @dev Implementation of the {IERC20} interface.
  *
- * Implementasi ini tidak sesuai dengan cara pembuatan token. Ini berarti
- * bahwa mekanisme pasokan harus ditambahkan dalam kontrak turunan menggunakan {_mint}.
- * Untuk mekanisme umum lihat {ERC20PresetMinterPauser}.
+ * This implementation is agnostic to the way tokens are created. This means
+ * that a supply mechanism has to be added in a derived contract using {_mint}.
+ * For a generic mechanism see {ERC20PresetMinterPauser}.
  *
- * TIPS: Untuk artikel terperinci, lihat panduan kami
- * https://forum.zeppelin.solutions/t/how-to-implement-erc20-supply-mechanisms/226[Bagaimana
- * untuk menerapkan mekanisme pasokan].
+ * TIP: For a detailed writeup see our guide
+ * https://forum.zeppelin.solutions/t/how-to-implement-erc20-supply-mechanisms/226[How
+ * to implement supply mechanisms].
  *
- * Kami telah mengikuti pedoman umum OpenZeppelin: fungsi dikembalikan
- * mengembalikan `false` jika gagal. Perilaku ini masih bersifat konvensional
- * dan tidak bertentangan dengan ekspektasi aplikasi ERC20.
+ * We have followed general OpenZeppelin guidelines: functions revert instead
+ * of returning `false` on failure. This behavior is nonetheless conventional
+ * and does not conflict with the expectations of ERC20 applications.
  *
- * Selain itu, peristiwa {Approval} dikeluarkan pada panggilan ke {transferFrom}.
- * Hal ini memungkinkan aplikasi untuk merekonstruksi penyisihan untuk semua akun saja
- * dengan mendengarkan acara tersebut. Implementasi EIP lainnya mungkin tidak mengeluarkan emisi
- * kejadian ini, karena tidak diwajibkan oleh spesifikasi.
+ * Additionally, an {Approval} event is emitted on calls to {transferFrom}.
+ * This allows applications to reconstruct the allowance for all accounts just
+ * by listening to said events. Other implementations of the EIP may not emit
+ * these events, as it isn't required by the specification.
  *
- * Terakhir, {decreaseAllowance} dan {increaseAllowance} non-standar
- * Fungsi telah ditambahkan untuk mengurangi masalah umum seputar pengaturan
- * tunjangan. Lihat {IERC20-approve}.
+ * Finally, the non-standard {decreaseAllowance} and {increaseAllowance}
+ * functions have been added to mitigate the well-known issues around setting
+ * allowances. See {IERC20-approve}.
  */
-kontrak ERC20 adalah Konteks, IERC20 {
-    menggunakan SafeMath untuk uint256;
+contract ERC20 is Context, IERC20 {
+    using SafeMath for uint256;
 
-    pemetaan (alamat => uint256) private _balances;
+    mapping (address => uint256) private _balances;
 
-    pemetaan (alamat => pemetaan (alamat => uint256)) private _allowances;
+    mapping (address => mapping (address => uint256)) private _allowances;
 
-    uint256 pribadi _totalSupply;
+    uint256 private _totalSupply;
 
-    string nama_pribadi;
-    string _simbol pribadi;
-    uint8 pribadi _desimal;
+    string private _name;
+    string private _symbol;
+    uint8 private _decimals;
 
     /**
-     * @dev Menetapkan nilai untuk {name} dan {symbol}, menginisialisasi {desimal} dengan
-     * nilai default 12.
+     * @dev Sets the values for {name} and {symbol}, initializes {decimals} with
+     * a default value of 12.
      *
-     * Untuk memilih nilai berbeda untuk {desimal}, gunakan {_setupDecimals}.
+     * To select a different value for {decimals}, use {_setupDecimals}.
      *
-     * Ketiga nilai ini tidak dapat diubah: hanya dapat ditetapkan satu kali saja
-     * konstruksi.
+     * All three of these values are immutable: they can only be set once during
+     * construction.
      */
-    konstruktor (nama memori string_, simbol memori string_) {
-        _nama = nama_;
-        _simbol = simbol_;
-        _desimal = 12;
+    constructor (string memory name_, string memory symbol_) {
+        _name = name_;
+        _symbol = symbol_;
+        _decimals = 12;
     }
 
     /**
-     * @dev Mengembalikan nama token.
+     * @dev Returns the name of the token.
      */
-    nama fungsi() tampilan publik pengembalian virtual (memori string) {
-        kembalikan _nama;
+    function name() public view virtual returns (string memory) {
+        return _name;
     }
 
     /**
-     * @dev Mengembalikan simbol token, biasanya versi yang lebih pendek
-     * nama.
+     * @dev Returns the symbol of the token, usually a shorter version of the
+     * name.
      */
-    simbol fungsi() tampilan publik pengembalian virtual (memori string) {
-        kembalikan _simbol;
+    function symbol() public view virtual returns (string memory) {
+        return _symbol;
     }
 
     /**
-     * @dev Mengembalikan jumlah desimal yang digunakan untuk mendapatkan representasi penggunanya.
-     * Misalnya, jika `desimal` sama dengan `12`, saldo token `12000000000000` harus
-     * ditampilkan kepada pengguna sebagai `12000000000000` (`12000000000000 / 10 ** 12`).
+     * @dev Returns the number of decimals used to get its user representation.
+     * For example, if `decimals` equals `12`, a balance of `12000000000000` tokens should
+     * be displayed to a user as `12000000000000` (`12000000000000 / 10 ** 12`).
      *
-     * Token biasanya memilih nilai 12, meniru hubungan antara keduanya
-     * Eter dan Wei. Ini adalah nilai yang digunakan oleh {ERC20}, kecuali jika {_setupDecimals} digunakan
-     * ditelepon.
+     * Tokens usually opt for a value of 18, imitating the relationship between
+     * Ether and Wei. This is the value {ERC20} uses, unless {_setupDecimals} is
+     * called.
      *
-     * CATATAN: Informasi ini hanya digunakan untuk tujuan _display_: informasi ini ada di
-     * tidak mempengaruhi aritmatika kontrak apa pun, termasuk
-     * {IERC20-balanceOf} dan {IERC20-transfer}.
+     * NOTE: This information is only used for _display_ purposes: it in
+     * no way affects any of the arithmetic of the contract, including
+     * {IERC20-balanceOf} and {IERC20-transfer}.
      */
-    fungsi desimal() tampilan publik pengembalian virtual (uint8) {
-        kembalikan _desimal;
+    function decimals() public view virtual returns (uint8) {
+        return _decimals;
     }
 
     /**
-     * @dev Lihat {IERC20-totalSupply}.
+     * @dev See {IERC20-totalSupply}.
      */
-    function totalSupply() tampilan publik pengembalian virtual override (uint256) {
-        kembalikan _totalSupply;
+    function totalSupply() public view virtual override returns (uint256) {
+        return _totalSupply;
     }
 
     /**
-     * @dev Lihat {IERC20-balanceOf}.
+     * @dev See {IERC20-balanceOf}.
      */
-    function balanceOf(akun alamat) tampilan umum pengembalian virtual override (uint256) {
-        kembalikan _saldo[akun];
+    function balanceOf(address account) public view virtual override returns (uint256) {
+        return _balances[account];
     }
 
     /**
-     * @dev Lihat {IERC20-transfer}.
+     * @dev See {IERC20-transfer}.
      *
-     * Persyaratan:
+     * Requirements:
      *
-     * - `penerima` tidak boleh berupa alamat nol.
-     * - penelepon harus memiliki saldo minimal `jumlah`.
+     * - `recipient` cannot be the zero address.
+     * - the caller must have a balance of at least `amount`.
      */
-    transfer fungsi (alamat penerima, jumlah uint256) pengembalian penggantian virtual publik (bool) {
-        _transfer(_msgSender(), penerima, jumlah);
-        kembali benar;
+    function transfer(address recipient, uint256 amount) public virtual override returns (bool) {
+        _transfer(_msgSender(), recipient, amount);
+        return true;
     }
 
     /**
-     * @dev Lihat {IERC20-allowance}.
+     * @dev See {IERC20-allowance}.
      */
-    tunjangan fungsi (pemilik alamat, pembelanja alamat) tampilan umum pengembalian penggantian virtual (uint256) {
-        return _allowances[pemilik][pembelanja];
+    function allowance(address owner, address spender) public view virtual override returns (uint256) {
+        return _allowances[owner][spender];
     }
 
     /**
-     * @dev Lihat {IERC20-approve}.
+     * @dev See {IERC20-approve}.
      *
-     * Persyaratan:
+     * Requirements:
      *
-     * - `pembelanja` tidak boleh berupa alamat nol.
+     * - `spender` cannot be the zero address.
      */
-    fungsi menyetujui (alamat pembelanja, jumlah uint256) pengembalian penggantian virtual publik (bool) {
-        _approve(_msgSender(), pembelanja, jumlah);
-        kembali benar;
+    function approve(address spender, uint256 amount) public virtual override returns (bool) {
+        _approve(_msgSender(), spender, amount);
+        return true;
     }
 
     /**
-     * @dev Lihat {IERC20-transferFrom}.
+     * @dev See {IERC20-transferFrom}.
      *
-     * Memancarkan peristiwa {Persetujuan} yang menunjukkan tunjangan yang diperbarui. Ini bukan
-     * diperlukan oleh EIP. Lihat catatan di awal {ERC20}.
+     * Emits an {Approval} event indicating the updated allowance. This is not
+     * required by the EIP. See the note at the beginning of {ERC20}.
      *
-     * Persyaratan:
+     * Requirements:
      *
-     * - `pengirim` dan `penerima` tidak boleh berupa alamat nol.
-     * - `pengirim` harus memiliki saldo minimal `jumlah`.
-     * - penelepon harus memiliki minimal token ``pengirim``
-     * `jumlah`.
+     * - `sender` and `recipient` cannot be the zero address.
+     * - `sender` must have a balance of at least `amount`.
+     * - the caller must have allowance for ``sender``'s tokens of at least
+     * `amount`.
      */
-    transfer fungsiDari(alamat pengirim, alamat penerima, jumlah uint256) pengembalian penggantian virtual publik (bool) {
-        _transfer(pengirim, penerima, jumlah);
-        _approve(sender, _msgSender(), _allowances[sender][_msgSender()].sub(amount, "ERC20: jumlah transfer melebihi tunjangan"));
-        kembali benar;
+    function transferFrom(address sender, address recipient, uint256 amount) public virtual override returns (bool) {
+        _transfer(sender, recipient, amount);
+        _approve(sender, _msgSender(), _allowances[sender][_msgSender()].sub(amount, "ERC20: transfer amount exceeds allowance"));
+        return true;
     }
 
     /**
-     * @dev Secara atom meningkatkan tunjangan yang diberikan kepada `pembelanja` oleh penelepon.
+     * @dev Atomically increases the allowance granted to `spender` by the caller.
      *
-     * Ini merupakan alternatif dari {approve} yang dapat digunakan sebagai mitigasi
-     * masalah yang dijelaskan di {IERC20-approve}.
+     * This is an alternative to {approve} that can be used as a mitigation for
+     * problems described in {IERC20-approve}.
      *
-     * Memancarkan peristiwa {Persetujuan} yang menunjukkan tunjangan yang diperbarui.
+     * Emits an {Approval} event indicating the updated allowance.
      *
-     * Persyaratan:
+     * Requirements:
      *
-     * - `pembelanja` tidak boleh berupa alamat nol.
+     * - `spender` cannot be the zero address.
      */
-    fungsi peningkatanAllowance(alamat pembelanja, uint256 nilai tambah) pengembalian virtual publik (bool) {
-        _approve(_msgSender(), pembelanja, _allowances[_msgSender()][spender].add(addedValue));
-        kembali benar;
+    function increaseAllowance(address spender, uint256 addedValue) public virtual returns (bool) {
+        _approve(_msgSender(), spender, _allowances[_msgSender()][spender].add(addedValue));
+        return true;
     }
 
     /**
-     * @dev Secara atom mengurangi tunjangan yang diberikan kepada `pembelanja` oleh penelepon.
+     * @dev Atomically decreases the allowance granted to `spender` by the caller.
      *
-     * Ini merupakan alternatif dari {approve} yang dapat digunakan sebagai mitigasi
-     * masalah yang dijelaskan di {IERC20-approve}.
+     * This is an alternative to {approve} that can be used as a mitigation for
+     * problems described in {IERC20-approve}.
      *
-     * Memancarkan peristiwa {Persetujuan} yang menunjukkan tunjangan yang diperbarui.
+     * Emits an {Approval} event indicating the updated allowance.
      *
-     * Persyaratan:
+     * Requirements:
      *
-     * - `pembelanja` tidak boleh berupa alamat nol.
-     * - `pembelanja` setidaknya harus memiliki uang saku untuk penelepon
-     * `Nilai yang dikurangi`.
+     * - `spender` cannot be the zero address.
+     * - `spender` must have allowance for the caller of at least
+     * `subtractedValue`.
      */
-    fungsi penurunanAllowance(alamat pembelanja, uint256 subtratedValue) pengembalian virtual publik (bool) {
-        _approve(_msgSender(), pembelanja, _allowances[_msgSender()][spender].sub(subtractedValue, "ERC20: penurunan tunjangan di bawah nol"));
-        kembali benar;
+    function decreaseAllowance(address spender, uint256 subtractedValue) public virtual returns (bool) {
+        _approve(_msgSender(), spender, _allowances[_msgSender()][spender].sub(subtractedValue, "ERC20: decreased allowance below zero"));
+        return true;
     }
 
     /**
-     * @dev Memindahkan token `jumlah` dari `pengirim` ke `penerima`.
+     * @dev Moves tokens `amount` from `sender` to `recipient`.
      *
-     * Ini adalah fungsi internal yang setara dengan {transfer}, dan dapat digunakan
-     *misalnya menerapkan biaya token otomatis, mekanisme pemotongan, dll.
+     * This is internal function is equivalent to {transfer}, and can be used to
+     * e.g. implement automatic token fees, slashing mechanisms, etc.
      *
-     * Memancarkan peristiwa {Transfer}.
+     * Emits a {Transfer} event.
      *
-     * Persyaratan:
+     * Requirements:
      *
-     * - `pengirim` tidak boleh berupa alamat nol.
-     * - `penerima` tidak boleh berupa alamat nol.
-     * - `pengirim` harus memiliki saldo minimal `jumlah`.
+     * - `sender` cannot be the zero address.
+     * - `recipient` cannot be the zero address.
+     * - `sender` must have a balance of at least `amount`.
      */
-    fungsi _transfer(alamat pengirim, alamat penerima, jumlah uint256) virtual internal {
-        require(sender != address(0), "ERC20: transfer dari alamat nol");
-        require(penerima != alamat(0), "ERC20: transfer ke alamat nol");
+    function _transfer(address sender, address recipient, uint256 amount) internal virtual {
+        require(sender != address(0), "ERC20: transfer from the zero address");
+        require(recipient != address(0), "ERC20: transfer to the zero address");
 
-        _beforeTokenTransfer(pengirim, penerima, jumlah);
+        _beforeTokenTransfer(sender, recipient, amount);
 
-        _balances[sender] = _balances[sender].sub(amount, "ERC20: jumlah transfer melebihi saldo");
-        _saldo[penerima] = _saldo[penerima].tambah(jumlah);
-        memancarkan Transfer(pengirim, penerima, jumlah);
+        _balances[sender] = _balances[sender].sub(amount, "ERC20: transfer amount exceeds balance");
+        _balances[recipient] = _balances[recipient].add(amount);
+        emit Transfer(sender, recipient, amount);
     }
 
-    /** @dev Membuat token `jumlah` dan menugaskannya ke `akun`, meningkat
-     * total pasokan.
+    /** @dev Creates `amount` tokens and assigns them to `account`, increasing
+     * the total supply.
      *
-     * Memancarkan acara {Transfer} dengan `dari` disetel ke alamat nol.
+     * Emits a {Transfer} event with `from` set to the zero address.
      *
-     * Persyaratan:
+     * Requirements:
      *
-     * - `to` tidak boleh berupa alamat nol.
+     * - `to` cannot be the zero address.
      */
-    fungsi _mint(alamat rekening, jumlah uint256) virtual internal {
-        require(akun != alamat(0), "ERC20: mint ke alamat nol");
+    function _mint(address account, uint256 amount) internal virtual {
+        require(account != address(0), "ERC20: mint to the zero address");
 
-        _beforeTokenTransfer(alamat(0), rekening, jumlah);
+        _beforeTokenTransfer(address(0), account, amount);
 
-        _totalSupply = _totalSupply.tambahkan(jumlah);
-        _saldo[akun] = _saldo[akun].tambahan(jumlah);
-        memancarkan Transfer(alamat(0), rekening, jumlah);
-    }
-
-    /**
-     * @dev Hancurkan token `jumlah` dari `akun`, sehingga mengurangi
-     * jumlah pasokan.
-     *
-     * Memancarkan acara {Transfer} dengan `to` disetel ke alamat nol.
-     *
-     * Persyaratan:
-     *
-     * - `akun` tidak boleh berupa alamat nol.
-     * - `akun` harus memiliki setidaknya `jumlah` token.
-     */
-    fungsi _burn(alamat rekening, jumlah uint256) virtual internal {
-        require(akun != alamat(0), "ERC20: bakar dari alamat nol");
-
-        _beforeTokenTransfer(akun, alamat(0), jumlah);
-
-        _balances[account] = _balances[account].sub(amount, "ERC20: jumlah pembakaran melebihi saldo");
-        _totalSupply = _totalSupply.sub(jumlah);
-        emit Transfer(rekening, alamat(0), jumlah);
+        _totalSupply = _totalSupply.add(amount);
+        _balances[account] = _balances[account].add(amount);
+        emit Transfer(address(0), account, amount);
     }
 
     /**
-     * @dev Menetapkan `jumlah` sebagai jatah `pembelanja` atas token `pemilik`.
+     * @dev Destroys `amount` tokens from `account`, reducing the
+     * total supply.
      *
-     * Fungsi internal ini setara dengan `menyetujui`, dan dapat digunakan untuk itu
-     *misalnya menetapkan tunjangan otomatis untuk subsistem tertentu, dll.
+     * Emits a {Transfer} event with `to` set to the zero address.
      *
-     * Memancarkan peristiwa {Persetujuan}.
+     * Requirements:
      *
-     * Persyaratan:
-     *
-     * - `pemilik` tidak boleh berupa alamat nol.
-     * - `pembelanja` tidak boleh berupa alamat nol.
+     * - `account` cannot be the zero address.
+     * - `account` must have at least `amount` tokens.
      */
-    fungsi _approve(pemilik alamat, alamat pembelanja, jumlah uint256) virtual internal {
-        require(pemilik != alamat(0), "ERC20: setujui dari alamat nol");
-        require(spender != address(0), "ERC20: setujui ke alamat nol");
+    function _burn(address account, uint256 amount) internal virtual {
+        require(account != address(0), "ERC20: burn from the zero address");
 
-        _tunjangan[pemilik][pembelanja] = jumlah;
-        memancarkan Persetujuan (pemilik, pembelanja, jumlah);
+        _beforeTokenTransfer(account, address(0), amount);
+
+        _balances[account] = _balances[account].sub(amount, "ERC20: burn amount exceeds balance");
+        _totalSupply = _totalSupply.sub(amount);
+        emit Transfer(account, address(0), amount);
     }
 
     /**
-     * @dev Menyetel {desimal} ke nilai selain nilai default 12.
+     * @dev Sets `amount` as the allowance of `spender` over the `owner` s tokens.
      *
-     * PERINGATAN: Fungsi ini hanya boleh dipanggil dari konstruktor. Paling
-     * Aplikasi yang berinteraksi dengan kontrak token tidak akan diharapkan
-     * {desimal} selalu berubah, dan mungkin tidak berfungsi dengan benar jika berubah.
+     * This internal function is equivalent to `approve`, and can be used to
+     * e.g. set automatic allowances for certain subsystems, etc.
+     *
+     * Emits an {Approval} event.
+     *
+     * Requirements:
+     *
+     * - `owner` cannot be the zero address.
+     * - `spender` cannot be the zero address.
      */
-    fungsi _setupDecimals(uint8 desimal_) virtual internal {
-        _desimal = desimal_;
+    function _approve(address owner, address spender, uint256 amount) internal virtual {
+        require(owner != address(0), "ERC20: approve from the zero address");
+        require(spender != address(0), "ERC20: approve to the zero address");
+
+        _allowances[owner][spender] = amount;
+        emit Approval(owner, spender, amount);
     }
 
     /**
-     * @dev Hook yang dipanggil sebelum transfer token apa pun. Ini termasuk
-     * mencetak dan membakar.
+     * @dev Sets {decimals} to a value other than the default one of 12.
      *
-     * Ketentuan panggilan:
-     *
-     * - ketika `dari` dan `ke` keduanya bukan nol, `jumlah` token ``dari``
-     * akan ditransfer ke `ke`.
-     * - ketika `dari` adalah nol, token `jumlah` akan dicetak untuk `ke`.
-     * - ketika `to` adalah nol, `jumlah` token ``dari`` akan dibakar.
-     * - `dari` dan `ke` keduanya tidak pernah nol.
-     *
-     * Untuk mempelajari lebih lanjut tentang hooks, kunjungi xref:ROOT:extending-contracts.adoc#using-hooks[Menggunakan Hooks].
+     * WARNING: This function should only be called from the constructor. Most
+     * applications that interact with token contracts will not expect
+     * {decimals} to ever change, and may work incorrectly if it does.
      */
-    fungsi _beforeTokenTransfer(alamat dari, alamat ke, jumlah uint256) virtual internal {}
+    function _setupDecimals(uint8 decimals_) internal virtual {
+        _decimals = decimals_;
+    }
+
+    /**
+     * @dev Hook that is called before any transfer of tokens. This includes
+     * minting and burning.
+     *
+     * Calling conditions:
+     *
+     * - when `from` and `to` are both non-zero, `amount` of ``from``'s tokens
+     * will be to transferred to `to`.
+     * - when `from` is zero, `amount` tokens will be minted for `to`.
+     * - when `to` is zero, `amount` of ``from``'s tokens will be burned.
+     * - `from` and `to` are never both zero.
+     *
+     * To learn more about hooks, head to xref:ROOT:extending-contracts.adoc#using-hooks[Using Hooks].
+     */
+    function _beforeTokenTransfer(address from, address to, uint256 amount) internal virtual { }
 }
